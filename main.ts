@@ -20,16 +20,40 @@ function processReadingViewMarks(root: ParentNode, mappings: EmojiMapping[]): vo
 
 // Live Preview renders highlights as <span class="cm-highlight">, with an
 // extra "cm-highlight-<color>" class for recognized native colors — no
-// <mark> element at all. We add our own "cm-highlight-<value>" class to
-// match; text is left alone since this DOM is contenteditable.
+// <mark> element at all. The "==" delimiters get their own sibling spans
+// (class cm-formatting cm-formatting-highlight cm-highlight) that also get
+// the color class from core, so they need it added too or they're left in
+// the default (yellow) highlight color. Group by .cm-line and apply the
+// same class to every cm-highlight span on the line — text is left alone
+// since this DOM is contenteditable.
+// ponytail: assumes one highlight per line (true for this vault's content);
+// two marks on the same line would incorrectly share one color.
+function colorClassOf(span: HTMLElement): string | null {
+	return Array.from(span.classList).find((c) => c.startsWith('cm-highlight-')) ?? null
+}
+
 function processLivePreviewSpans(root: ParentNode, mappings: EmojiMapping[]): void {
-	root.querySelectorAll<HTMLElement>('span.cm-highlight').forEach((span) => {
-		if (Array.from(span.classList).some((c) => c.startsWith('cm-highlight-'))) return
+	root.querySelectorAll<HTMLElement>('.cm-line').forEach((line) => {
+		const spans = Array.from(line.querySelectorAll<HTMLElement>('span.cm-highlight'))
+		if (spans.length === 0) return
 
-		const value = highlightValueForMarkText(span.textContent ?? '', mappings)
-		if (!value) return
+		// Delimiter spans are recreated (uncolored) whenever the cursor moves
+		// onto/off the line, even after the content span was already colored
+		// on an earlier pass — so derive the color from whichever span has it
+		// rather than bailing out if *any* span looks done.
+		const alreadyColored = spans.map(colorClassOf).find((c) => c !== null)
+		const colorClass =
+			alreadyColored ??
+			(() => {
+				const contentSpan = spans.find((s) => !s.classList.contains('cm-formatting'))
+				const value = contentSpan && highlightValueForMarkText(contentSpan.textContent ?? '', mappings)
+				return value ? `cm-highlight-${value}` : null
+			})()
+		if (!colorClass) return
 
-		span.classList.add(`cm-highlight-${value}`)
+		spans.forEach((s) => {
+			if (!colorClassOf(s)) s.classList.add(colorClass)
+		})
 	})
 }
 
@@ -51,7 +75,10 @@ export default class HighlightPlugin extends Plugin {
 				}
 
 				update(update: ViewUpdate): void {
-					if (update.docChanged || update.viewportChanged) {
+					// selectionSet matters here too: moving the cursor onto/off a
+					// highlighted line reveals/hides its "==" delimiter spans as
+					// fresh DOM, which then need (re-)coloring.
+					if (update.docChanged || update.viewportChanged || update.selectionSet) {
 						processLivePreviewSpans(update.view.dom, settings.emojiMap)
 					}
 				}
