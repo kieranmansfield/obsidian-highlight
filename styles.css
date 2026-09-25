@@ -1,3 +1,8 @@
+.hltr-suggest-value {
+	color: var(--text-muted);
+	margin-left: 4px;
+}
+
 /* Default colors for the data-highlight values this plugin assigns.
    Matches each value in emojiMap.ts's DEFAULT_EMOJI_MAP. Custom values
    added via the settings tab won't have a rule here unless you add one.

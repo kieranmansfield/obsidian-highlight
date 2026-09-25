@@ -2,6 +2,7 @@ import { Plugin } from 'obsidian'
 import { ViewPlugin, type ViewUpdate, type EditorView } from '@codemirror/view'
 import { highlightValueForMarkText, stripLeadingEmoji, type EmojiMapping } from './emojiMap'
 import { DEFAULT_SETTINGS, HighlightSettingTab, type HighlightSettings } from './settings'
+import { HighlightEmojiSuggest } from './suggest'
 
 // Reading View renders highlights as <mark data-highlight="...">. Obsidian
 // always sets the attribute (even "" for unrecognized emoji), so presence
@@ -87,6 +88,7 @@ export default class HighlightPlugin extends Plugin {
 		this.registerEditorExtension(livePreviewMarkPlugin)
 
 		this.addSettingTab(new HighlightSettingTab(this.app, this))
+		this.registerEditorSuggest(new HighlightEmojiSuggest(this.app, this))
 	}
 
 	async loadSettings(): Promise<void> {
