@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Semantic Highlights is an Obsidian plugin. Obsidian's core parser recognizes only six `==emoji text==` highlight colors (🔴🟠🟡🟢🔵🟣), rendering them as `<mark data-highlight="color">`. This plugin adds matching `hltr-*` classes to marks that use a leading emoji core doesn't recognize (💬 quote, 💡 coreideas, 🛠️ application, 🎯 action, 🩷 reflections/pink), so a separate CSS snippet can color them the same way. It ships no CSS of its own — colors live in the target vault's own `highlights.css` snippet.
+Highlight is an Obsidian plugin. Obsidian's core parser recognizes only six `==emoji text==` highlight colors (🔴🟠🟡🟢🔵🟣), rendering them as `<mark data-highlight="color">`. This plugin adds matching `hltr-*` classes to marks that use a leading emoji core doesn't recognize (💬 quote, 💡 coreideas, 🛠️ application, 🎯 action, 🩷 reflections/pink), so a separate CSS snippet can color them the same way. It ships no CSS of its own — colors live in the target vault's own `highlights.css` snippet.
 
 ## Build & Development Commands
 
@@ -28,7 +28,7 @@ eslint main.ts
 ## Architecture
 
 - `emojiMap.ts` — single source of truth: `EMOJI_CLASS` maps each semantic emoji to its `hltr-*` class, plus `classForMarkText`/`stripLeadingEmoji` helpers.
-- `main.ts` — `SemanticHighlightsPlugin`:
+- `main.ts` — `HighlightPlugin`:
   - `registerMarkdownPostProcessor` — Reading View. Adds the class and strips the emoji from displayed text (safe, static DOM).
   - `registerEditorExtension` with a CM6 `ViewPlugin` — Live Preview. Adds the class only; does **not** mutate text (contenteditable DOM — stripping risks cursor/undo breakage).
   - Both paths skip any `<mark>` that already has `data-highlight` (native color marks) and guard against double-processing via `dataset.hltrSemantic`.

@@ -1,6 +1,6 @@
 {
 	"id": "obsidian-highlight",
-	"name": "Semantic Highlights",
+	"name": "Highlight",
 	"minAppVersion": "1.14.0",
 	"description": "Adds hltr-* semantic classes to native ==emoji== highlight marks that Obsidian's core parser doesn't color (💬 💡 🛠️ 🎯 🩷), in both Reading View and Live Preview.",
 	"author": "Kieran Mansfield",

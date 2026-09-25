@@ -39,7 +39,7 @@ const livePreviewMarkPlugin = ViewPlugin.fromClass(
 	},
 )
 
-export default class SemanticHighlightsPlugin extends Plugin {
+export default class HighlightPlugin extends Plugin {
 	onload(): void {
 		this.registerMarkdownPostProcessor((el) => {
 			processMarks(el, true)
