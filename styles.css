@@ -1,2 +1,63 @@
-/* No styles here — colors for hltr-* classes live in the vault's own
-   .obsidian/snippets/highlights.css, not shipped with this plugin. */
+/* Default colors for the data-highlight values this plugin assigns.
+   Matches each value in emojiMap.ts's DEFAULT_EMOJI_MAP. Custom values
+   added via the settings tab won't have a rule here unless you add one.
+
+   Reading View uses mark[data-highlight="value"]; Live Preview has no
+   <mark> at all and uses span.cm-highlight-value instead — both need a
+   rule since the plugin targets different DOM in each view. */
+
+.theme-light {
+	mark[data-highlight="quote"],
+	.cm-highlight-quote {
+		color: #601faa !important;
+		background-color: #d2b3ffa6 !important;
+	}
+	mark[data-highlight="coreideas"],
+	.cm-highlight-coreideas {
+		color: #c54109 !important;
+		background-color: #ffb86ca6 !important;
+	}
+	mark[data-highlight="application"],
+	.cm-highlight-application {
+		color: #126915 !important;
+		background-color: #bbfabba6 !important;
+	}
+	mark[data-highlight="action"],
+	.cm-highlight-action {
+		color: #a26006 !important;
+		background-color: #fff3a3a6 !important;
+	}
+	mark[data-highlight="reflections"],
+	.cm-highlight-reflections {
+		color: #8d0e54 !important;
+		background-color: #ffb8eba6 !important;
+	}
+}
+
+.theme-dark {
+	mark[data-highlight="quote"],
+	.cm-highlight-quote {
+		background-color: #601faa66 !important;
+		color: #d2b3ff !important;
+	}
+	mark[data-highlight="coreideas"],
+	.cm-highlight-coreideas {
+		background-color: #c5410966 !important;
+		color: #ffb86c !important;
+	}
+	mark[data-highlight="application"],
+	.cm-highlight-application {
+		background-color: #12691566 !important;
+		color: #bbfabb !important;
+	}
+	mark[data-highlight="action"],
+	.cm-highlight-action {
+		background-color: #a2600666 !important;
+		color: #fff3a3 !important;
+	}
+	mark[data-highlight="reflections"],
+	.cm-highlight-reflections {
+		background-color: #8d0e5466 !important;
+		color: #ffb8eb !important;
+	}
+}

@@ -1,50 +1,72 @@
 import { Plugin } from 'obsidian'
 import { ViewPlugin, type ViewUpdate, type EditorView } from '@codemirror/view'
-import { classForMarkText, stripLeadingEmoji } from './emojiMap'
+import { highlightValueForMarkText, stripLeadingEmoji, type EmojiMapping } from './emojiMap'
+import { DEFAULT_SETTINGS, HighlightSettingTab, type HighlightSettings } from './settings'
 
-const PROCESSED = 'hltrSemantic'
+// Reading View renders highlights as <mark data-highlight="...">. Obsidian
+// always sets the attribute (even "" for unrecognized emoji), so presence
+// alone can't signal "already processed" — check its value instead.
+function processReadingViewMarks(root: ParentNode, mappings: EmojiMapping[]): void {
+	root.querySelectorAll<HTMLElement>('mark').forEach((mark) => {
+		if (mark.getAttribute('data-highlight')) return
 
-function applyClassToMark(mark: HTMLElement, stripText: boolean): void {
-	if (mark.dataset[PROCESSED]) return
-	if (mark.hasAttribute('data-highlight')) return
+		const value = highlightValueForMarkText(mark.textContent ?? '', mappings)
+		if (!value) return
 
-	const cls = classForMarkText(mark.textContent ?? '')
-	if (!cls) return
-
-	mark.classList.add(cls)
-	mark.dataset[PROCESSED] = '1'
-
-	if (stripText) {
-		mark.textContent = stripLeadingEmoji(mark.textContent ?? '')
-	}
-}
-
-function processMarks(root: ParentNode, stripText: boolean): void {
-	root.querySelectorAll<HTMLElement>('mark:not([data-highlight])').forEach((mark) => {
-		applyClassToMark(mark, stripText)
+		mark.setAttribute('data-highlight', value)
+		mark.textContent = stripLeadingEmoji(mark.textContent ?? '', mappings)
 	})
 }
 
-const livePreviewMarkPlugin = ViewPlugin.fromClass(
-	class {
-		constructor(view: EditorView) {
-			processMarks(view.dom, false)
-		}
+// Live Preview renders highlights as <span class="cm-highlight">, with an
+// extra "cm-highlight-<color>" class for recognized native colors — no
+// <mark> element at all. We add our own "cm-highlight-<value>" class to
+// match; text is left alone since this DOM is contenteditable.
+function processLivePreviewSpans(root: ParentNode, mappings: EmojiMapping[]): void {
+	root.querySelectorAll<HTMLElement>('span.cm-highlight').forEach((span) => {
+		if (Array.from(span.classList).some((c) => c.startsWith('cm-highlight-'))) return
 
-		update(update: ViewUpdate): void {
-			if (update.docChanged || update.viewportChanged) {
-				processMarks(update.view.dom, false)
-			}
-		}
-	},
-)
+		const value = highlightValueForMarkText(span.textContent ?? '', mappings)
+		if (!value) return
+
+		span.classList.add(`cm-highlight-${value}`)
+	})
+}
 
 export default class HighlightPlugin extends Plugin {
-	onload(): void {
+	settings: HighlightSettings = DEFAULT_SETTINGS
+
+	async onload(): Promise<void> {
+		await this.loadSettings()
+
 		this.registerMarkdownPostProcessor((el) => {
-			processMarks(el, true)
+			processReadingViewMarks(el, this.settings.emojiMap)
 		})
 
+		const settings = this.settings
+		const livePreviewMarkPlugin = ViewPlugin.fromClass(
+			class {
+				constructor(view: EditorView) {
+					processLivePreviewSpans(view.dom, settings.emojiMap)
+				}
+
+				update(update: ViewUpdate): void {
+					if (update.docChanged || update.viewportChanged) {
+						processLivePreviewSpans(update.view.dom, settings.emojiMap)
+					}
+				}
+			},
+		)
 		this.registerEditorExtension(livePreviewMarkPlugin)
+
+		this.addSettingTab(new HighlightSettingTab(this.app, this))
+	}
+
+	async loadSettings(): Promise<void> {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData())
+	}
+
+	async saveSettings(): Promise<void> {
+		await this.saveData(this.settings)
 	}
 }
